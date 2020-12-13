@@ -1,0 +1,415 @@
+<template>
+  <div>
+      
+    <Card :bordered="false"
+          dis-hover
+          class="list-table-list-card ivu-mt"
+          ref="card">
+      <Form ref="form"
+            :model="queryParams"
+            :label-width="labelWidth"
+            :label-position="labelPosition">
+        <Row :gutter="24"
+             type="flex"
+             justify="begin">
+          <Col v-bind="grid">
+          <FormItem label="供应商名称："
+                    prop=" "
+                    label-for="partnerName">
+            <Input v-model="queryParams.partnerName"
+                   placeholder="请输入" style="width: 300px;"
+				   clearable
+                   element-id="partnerName" />
+          </FormItem>
+            <FormItem label="供应商等级" 
+                    prop="partnerLevel"
+                    label-for="partnerLevel">
+                  <Select v-model="model1" style="width:300px;">
+        <Option v-for="item in partnerLevelName" :value="item.value" :key="item.value">{{ item.label }}</Option>
+    </Select> 
+       </FormItem>
+          
+          
+          </Col>
+          <Col v-bind="grid"
+               class="ivu-text-right">
+          <FormItem>
+            <Button type="primary"
+                    @click="getData">查询</Button>
+          </FormItem>
+          </Col>
+        </Row>
+      </Form>
+      <table-list ref="table"
+                  :columns="columns"
+                  :createRules="createRules"
+                  :slots="slots"
+                  :auth="auth"
+                  :tableData="tableData"
+                  :total="total"
+                  :loading="loading"
+                  @on-clear="handleClearSelect"
+                  @on-delete="handleDelete"
+                  @on-update="handleUpdate"
+                  @on-refresh="getData"
+                  @on-create="handleOpenCreate"
+                   />
+      <Modal v-model="showModal"
+             :title="form.id ? '编辑' : '新增'"
+             :width="680"
+             :loading="creating"
+             @on-ok="handleCreate"
+             :transfer="false">
+        <Form ref="create"
+              :model="form"
+              :rules="createRules"
+              :label-width="120">
+          <FormItem prop="partnerCode"
+                    label="编号：">
+            <Input v-model="form.partnerCode"
+				   clearable 
+                   placeholder="请输入供应商编号" />
+          </FormItem>
+          <FormItem prop="partnerName"
+                    label="名称：">
+            <Input v-model="form.partnerName" 
+				   clearable
+                   type="textarea"
+                   placeholder="请输入供应商名称" />
+          </FormItem>
+           <FormItem prop="partnerLevelName"
+                    label="等级：">
+           
+                     <Select v-model="form.partnerLevelName" placeholder="请选择供应商等级">
+                <Option value="优秀">优秀</Option>
+                <Option value="良好">良好</Option>
+                
+            </Select>
+          </FormItem>
+          <FormItem prop="contact"
+                    label="联系人：">
+            <Input v-model="form.contact" 
+				   clearable
+                   type="textarea"
+                   placeholder="请输入联系人" />
+          </FormItem>
+          <FormItem prop="contactInfo"
+                    label="联系方式：">
+            <Input v-model="form.contactInfo" 
+				   clearable
+                   type="textarea"
+                   placeholder="请输入联系方式" />
+          </FormItem>
+          <FormItem prop="email"
+                    label="邮箱：">
+            <Input v-model="form.email" 
+				   clearable
+                   type="textarea"
+                   placeholder="请输入邮箱" />
+          </FormItem>
+          <FormItem prop="address"
+                    label="地址：">
+            <Input v-model="form.address" 
+				   clearable
+                   type="textarea"
+                   placeholder="请输入地址" />
+          </FormItem>
+        </Form>
+      </Modal>
+    </Card>
+  </div>
+</template>
+<script>
+import tableList from '@/components/table';
+
+import { PartnerList, PartnerInsert, PartnerUpdate,PartnerDelete, PartnerDetail } from '@/api/system-config/partner'
+import { RemoveSpaces } from '@/plugins/utils/common'
+import { mapState } from 'vuex';
+export default {
+  name: 'system-config-partner',
+  components: {tableList},
+  props:{
+      
+  },
+  data () {
+    return {
+      grid: {
+        xl: 8,
+        lg: 8,
+        md: 12,
+        sm: 24,
+        xs: 24
+      },
+       partnerLevelName: [
+                    {
+                        value: '优秀',
+                        label: '优秀'
+                    },
+                    {
+                        value: '良好',
+                        label: '良好'
+                    },
+                  ],
+      // 加载中
+      loading: false,
+     
+      // 按钮权限
+      auth: ['add', 'edit', 'delete'],
+      // table 表头名称
+      columns: [
+        {
+          title: '序号',
+          key:  'number',
+          show: true
+        },
+        
+        {
+           title: '供应商编码',
+           key: 'partnerCode',
+          show: true
+        },
+        {
+          title: '供应商名称',
+          key: 'partnerName',
+          show: true
+        },
+        
+        {
+         title: '供应商等级',
+        key: 'partnerLevelName',
+        show: true
+        },
+         {
+         title: '联系人',
+         key: 'contact',
+         show: true
+           },
+         {
+           title: '联系方式',
+            key: 'contactInfo',
+            show: true
+          },
+           {
+           title: '邮箱',
+            key: 'email',
+              width: 150,
+            show: true
+            },
+            {
+           title: '地址',
+           key: 'address',
+             width: 180,
+           show: true
+         },
+         {
+         title: '备注',
+         key: 'remark',
+         show: true
+         },
+        {
+          title: '操作',
+          slot: 'action',
+          align: 'left',
+          minWidth: 100,
+          show: true
+        },
+        
+        
+      ],
+      // 表格数据
+      tableData: [],
+      // 总条数
+      total: 0,
+      // 字段slot 需要转换的
+      slots: {
+        // 除了删除和编辑以外的操作
+        action: []
+      },
+      // 创建数据
+      form: {},
+      // 查询参数
+      queryParams: {
+        pageSize: 10,
+        pageNum: 1,
+        partnerName:undefined,
+        partnerLevel:undefined,
+        
+      },
+      // 显示模态框
+      showModal: false,
+      // 模态框创建或者修改数据中
+      creating: true,
+      // 创建规则
+      createRules: {
+                    partnerCode:[
+                        { required: false, message: '请输入供应商编号', trigger: 'blur' }
+                    ],
+                   partnerName: [
+                        { required: true, message: '请输入供应商名称', trigger: 'blur' }
+                    ],
+                    partnerLevelName: [
+                        { required: false, message: '请选择供应商等级', trigger: 'change' }
+                    ],
+                    contact: [
+                        { required: true, message: '请输入联系人', trigger: 'change' }
+                    ],
+                    contactInfo: [
+                        { required: true, message: '请输入联系方式', trigger: 'change' }
+                    ],
+                    email: [
+                        { required: false, message: '请输入邮箱', trigger: 'blur' },
+                        { type: 'email', message: 'Incorrect email format', trigger: 'blur' }
+                    ],
+                    address: [
+                        { required: true, message: '请输入地址', trigger: 'change' }
+                    ],
+      },
+    }
+  },
+  computed: {
+    ...mapState('admin/layout', [
+      'isMobile'
+    ]),
+    labelWidth () {
+      return this.isMobile ? undefined : 100;
+    },
+    labelPosition () {
+      return this.isMobile ? 'top' : 'right';
+    }
+  },
+  methods: {
+    /**
+     * 重置
+     */
+    handleReset () {
+      this.$refs.form.resetFields();
+      this.getData();
+    },
+    /**
+     * 表单重置
+     */
+    reset () {
+      this.form = {
+        id: undefined,
+        partnerCode:undefined,
+        partnerName:undefined,
+        partnerLevel:undefined,
+        contact:undefined,
+        contactInfo:undefined,
+        email:undefined,
+        address:undefined,
+        remark: undefined,
+        partnerLevelName:undefined,
+        isDeleted: undefined,
+        partnerType:undefined
+        
+      }
+      this.$refs.create.resetFields();
+    },
+    /**
+     * 新建
+     */
+    handleOpenCreate () {
+      this.reset();
+      this.showModal = true;
+    },
+    /**
+     * 获取数据
+     */
+    getData () {
+      let that = this;
+      //  that.loading = true;
+      this.queryParams.pageSize = that.$refs.table.size;
+      this.queryParams.pageNum = that.$refs.table.current;
+      PartnerList(this.queryParams).then(res => {
+        that.loading = false;
+        that.tableData = res.data;
+        that.total = res.total;
+        that.handleCheckSelect();
+      })
+      
+    },
+    /**
+     * 根据ID获取用户信息
+     */
+    handleGetDataById (id) {
+     PartnerDetail(id).then(res => {
+        this.showModal = true;
+        this.form = res;
+      })
+    },
+    /**
+     * 清空选中的数据
+     */
+    handleClearSelect () {
+      let that = this;
+      const selectedNames = that.$refs.table.selectedData.map(item => item.id);
+      that.tableData.map(item => {
+        item._checked = false;
+      });
+      // 改变数组本身，让vue监听到，渲染到页面
+      that.tableData.splice(0, 1, that.tableData[0]);
+    },
+    /**
+     * 切换数据选中数据
+     */
+    handleCheckSelect () {
+      let that = this;
+      const selectedNames = that.$refs.table.selectedData.map(item => item.id);
+      that.tableData.map(item => {
+        item._checked = selectedNames.indexOf(item.id) >= 0;
+        return item;
+      });
+    },
+    // 新增数据、修改数据
+    handleCreate () {
+      // 移除左右两边的空格
+      RemoveSpaces(this.form);
+      this.$refs.create.validate((valid) => {
+        if (valid) {
+          if (this.form.id === undefined) {
+            PartnerInsert(this.form).then(res => {
+              this.$Message.success('创建成功');
+              this.getData();
+            })
+          } else {
+            // 修改
+            PartnerUpdate(this.form).then(res => {
+              this.getData();
+              this.$Message.success('修改成功');
+            })
+          }
+          this.showModal = false;
+          this.creating = false;
+          this.$nextTick(() => {
+          this.creating = true;
+          });
+        } else {
+          this.creating = false;
+          this.$nextTick(() => {
+            this.creating = true;
+          });
+        }
+      });
+    },
+    // 编辑数据
+    handleUpdate (row) {
+      this.reset();
+      this.handleGetDataById(row.id)
+    },
+    /**
+     * 删除
+     */
+    handleDelete (row) {
+      const item = row;
+      PartnerDelete(row.id).then(res => {
+        this.$Message.success('删除成功');
+        this.getData();
+      })
+    }
+  },
+  mounted () {
+    this.getData();
+  }
+}
+</script>

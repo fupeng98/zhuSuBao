@@ -1,0 +1,59 @@
+import request from '@/plugins/request';
+const name = '/factory-modeling/partner';
+/**
+ * 获取列表
+ * @param {} data 
+ */
+export function PartnerList(data) {
+    return request({
+        url: `${name}/list`,
+        method: 'get',
+        params: data
+    });
+}
+
+/**
+ * 新建
+ * @param {} data 
+ */
+export function PartnerInsert(data) {
+    return request({
+        url: `${name}/insert`,
+        method: 'post',
+        data
+    });
+}
+
+/**
+ * 修改信息
+ * @param {} data 
+ */
+export function PartnerUpdate(data) {
+    return request({
+        url: `${name}/update`,
+        method: 'put',
+        data
+    });
+}
+
+/**
+ * 删除
+ * @param {} id 
+ */
+export function PartnerDelete(id) {
+    return request({
+        url: `${name}/delete/${id}`,
+        method: 'delete'
+    });
+}
+
+/**
+ * 通过ID查询信息
+ * @param {} id 
+ */
+export function PartnerDetail(id) {
+    return request({
+        url: `${name}/get/${id}`,
+        method: 'get'
+    });
+}

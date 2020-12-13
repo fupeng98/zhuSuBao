@@ -1,0 +1,76 @@
+import request from '@/plugins/request';
+const name = '/factory-modeling/dictionary'
+    /**
+     * 获取字典详细信息
+     * @param {} id 
+     */
+export function dataDicItemDetail(id) {
+    return request({
+        url: `${name}/get/${id}`,
+        method: 'get'
+    });
+}
+/**
+ * 删除
+ * @param {} id 
+ */
+export function dataDicItemDelete(id) {
+    return request({
+        url: `${name}/delete/${id}`,
+        method: 'delete'
+    });
+}
+/**
+ * 根据字典类型查找字典项
+ * @param {} id 
+ */
+export function dataDicItemType(data) {
+    return request({
+        url: `${name}/getByDicType`,
+        method: 'get',
+        params: data
+    });
+}
+/**
+ * 新增数据字典项
+ * @param {} data 
+ */
+export function dataDicItemInsert(data) {
+    return request({
+        url: `${name}/insert`,
+        method: 'post',
+        data
+    });
+}
+/**
+ * 查询数据字典项列表
+ * @param {} data 
+ */
+export function dataDicItemList(data) {
+    return request({
+        url: `${name}/list`,
+        method: 'get',
+        params: data
+    });
+}
+/**
+ * 获取下拉框
+ * @param {} id 
+ */
+export function dataDicItemDropdown(dicType) {
+    return request({
+        url: `${name}/get/${dicType}`,
+        method: 'get'
+    });
+}
+/**
+ * 修改数据字典项
+ * @param {} data 
+ */
+export function dataDicItemUpdate(data) {
+    return request({
+        url: `${name}/update`,
+        method: 'put',
+        data
+    });
+}
